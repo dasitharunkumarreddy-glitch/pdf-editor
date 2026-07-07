@@ -29,7 +29,8 @@ export const SaveButton: React.FC = () => {
       );
 
       // Create a Blob from the safe PDF bytes
-      const blob = new Blob([editedPdfBytes], {
+      // Cast buffer as ArrayBuffer to satisfy TypeScript (excludes SharedArrayBuffer)
+      const blob = new Blob([editedPdfBytes.buffer as ArrayBuffer], {
         type: 'application/pdf',
       });
       const url = URL.createObjectURL(blob);
