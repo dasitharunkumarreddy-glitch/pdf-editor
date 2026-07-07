@@ -221,6 +221,8 @@ export async function exportPdfDocument(
     }
   }
 
-  // Save the PDF
-  return await pdfDoc.save();
+  // Save the PDF and create a proper copy to avoid detached buffer issues
+  const pdfBytes = await pdfDoc.save();
+  // .slice() creates a new Uint8Array with fresh ArrayBuffer
+  return pdfBytes.slice();
 }
