@@ -10,6 +10,12 @@ export const SaveButton: React.FC = () => {
   const handleExport = async () => {
     if (!fileBuffer) return;
 
+    // If a text field is still being edited, blur it so Fabric commits the change.
+    const activeElement = document.activeElement as HTMLElement | null;
+    if (activeElement?.blur) {
+      activeElement.blur();
+    }
+
     setIsSaving(true);
     try {
       // Small timeout to let the UI update and show loader
@@ -22,8 +28,8 @@ export const SaveButton: React.FC = () => {
         pagesDimensions
       );
 
-      // Create a Blob from the byte array
-      const blob = new Blob([editedPdfBytes.buffer as ArrayBuffer], { type: 'application/pdf' });
+      // Create a Blob from the exact saved bytes
+      const blob = new Blob([editedPdfBytes], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
 
       // Create a temporary link and click it to download

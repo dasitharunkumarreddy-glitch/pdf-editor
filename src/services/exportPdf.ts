@@ -84,8 +84,8 @@ export async function exportPdfDocument(
   annotations: Record<number, AnnotationItem[]>,
   _pagesDimensions: Record<number, PageDimensions>
 ): Promise<Uint8Array> {
-  // Load original PDF
-  const pdfDoc = await PDFDocument.load(originalBuffer);
+  // Load original PDF from a copy to avoid using a detached ArrayBuffer.
+  const pdfDoc = await PDFDocument.load(originalBuffer.slice(0));
   const pages = pdfDoc.getPages();
 
   for (let i = 0; i < pages.length; i++) {
