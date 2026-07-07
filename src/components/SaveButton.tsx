@@ -28,8 +28,12 @@ export const SaveButton: React.FC = () => {
         pagesDimensions
       );
 
-      // Create a Blob from the exact saved bytes
-      const blob = new Blob([new Uint8Array(editedPdfBytes)], {
+      // Create a safe Uint8Array backed by ArrayBuffer (not SharedArrayBuffer)
+      // to satisfy Blob's type requirements
+      const safeBytes = new Uint8Array(editedPdfBytes.length);
+      safeBytes.set(editedPdfBytes);
+      
+      const blob = new Blob([safeBytes], {
         type: 'application/pdf',
       });
       const url = URL.createObjectURL(blob);
