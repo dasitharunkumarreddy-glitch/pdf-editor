@@ -9,10 +9,10 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@6.1.200/b
  * Loads a PDF document from an ArrayBuffer.
  */
 export async function loadPdfDocument(buffer: ArrayBuffer): Promise<pdfjsLib.PDFDocumentProxy> {
-  // Copy the buffer before handing it to PDF.js to avoid a detached ArrayBuffer
-  // if the library transfers or reuses the original data internally.
-  const pdfBuffer = buffer.slice(0);
-  const loadingTask = pdfjsLib.getDocument({ data: pdfBuffer });
+  // Create a proper copy of the buffer to avoid detached ArrayBuffer issues.
+  // slice(0) doesn't work if the buffer was already transferred, so we use Uint8Array copy.
+  const bufferCopy = new Uint8Array(buffer).buffer;
+  const loadingTask = pdfjsLib.getDocument({ data: bufferCopy });
   return await loadingTask.promise;
 }
 

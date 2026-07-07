@@ -58,11 +58,13 @@ export const Home: React.FC = () => {
       bytes[i] = binaryString.charCodeAt(i);
     }
 
-    const sampleFile = new File([bytes.buffer], 'sample_document.pdf', {
+    const sampleFile = new File([bytes], 'sample_document.pdf', {
       type: 'application/pdf',
     });
 
-    await processPdfBuffer(sampleFile, bytes.buffer);
+    // Create a proper copy of the buffer to avoid detached ArrayBuffer issues
+    const bufferCopy = new Uint8Array(bytes).buffer;
+    await processPdfBuffer(sampleFile, bufferCopy);
   };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
