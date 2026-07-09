@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { fabric } from 'fabric';
+import { Canvas, Ellipse, FabricImage, Path, Rect, Textbox } from 'fabric';
 import { usePdfStore } from '../store/pdfStore';
 import { getCssFontFamily } from '../utils/fonts';
 
@@ -11,7 +11,7 @@ interface FabricCanvasProps {
 
 export const FabricCanvas: React.FC<FabricCanvasProps> = ({ pageIndex, width, height }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const fabricCanvasRef = useRef<fabric.Canvas | null>(null);
+  const fabricCanvasRef = useRef<Canvas | null>(null);
   const isUpdatingStoreRef = useRef<boolean>(false);
 
   const {
@@ -39,7 +39,7 @@ export const FabricCanvas: React.FC<FabricCanvasProps> = ({ pageIndex, width, he
     const canvasEl = canvasRef.current;
     if (!canvasEl) return;
 
-    const canvas = new fabric.Canvas(canvasEl, {
+    const canvas = new Canvas(canvasEl, {
       width: scaledWidth,
       height: scaledHeight,
       selection: activeTool === 'select',
@@ -71,8 +71,7 @@ export const FabricCanvas: React.FC<FabricCanvasProps> = ({ pageIndex, width, he
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
 
-    canvas.setWidth(scaledWidth);
-    canvas.setHeight(scaledHeight);
+    canvas.setDimensions({ width: scaledWidth, height: scaledHeight });
     canvas.requestRenderAll();
   }, [zoom, scaledWidth, scaledHeight]);
 
@@ -131,7 +130,7 @@ export const FabricCanvas: React.FC<FabricCanvasProps> = ({ pageIndex, width, he
       const hasBeenEdited = !!edit;
       const actualTextColor = edit ? edit.color : item.color;
 
-      const textbox = new fabric.Textbox(textToDisplay, {
+      const textbox = new Textbox(textToDisplay, {
         id: item.id,
         left: item.x * zoom,
         top: item.y * zoom,
@@ -222,7 +221,7 @@ export const FabricCanvas: React.FC<FabricCanvasProps> = ({ pageIndex, width, he
     // B. Render Annotations (Shapes, Images, Signatures, Drawings)
     pageAnns.forEach((ann) => {
       if (ann.type === 'highlight') {
-        const rect = new fabric.Rect({
+        const rect = new Rect({
           id: ann.id,
           left: ann.x * zoom,
           top: ann.y * zoom,
@@ -238,7 +237,7 @@ export const FabricCanvas: React.FC<FabricCanvasProps> = ({ pageIndex, width, he
         canvas.add(rect);
       } 
       else if (ann.type === 'rect') {
-        const rect = new fabric.Rect({
+        const rect = new Rect({
           id: ann.id,
           left: ann.x * zoom,
           top: ann.y * zoom,
@@ -255,7 +254,7 @@ export const FabricCanvas: React.FC<FabricCanvasProps> = ({ pageIndex, width, he
         canvas.add(rect);
       } 
       else if (ann.type === 'circle') {
-        const circle = new fabric.Ellipse({
+        const circle = new Ellipse({
           id: ann.id,
           left: ann.x * zoom,
           top: ann.y * zoom,
@@ -272,7 +271,7 @@ export const FabricCanvas: React.FC<FabricCanvasProps> = ({ pageIndex, width, he
         canvas.add(circle);
       } 
       else if (ann.type === 'image' || ann.type === 'signature') {
-        fabric.Image.fromURL(ann.dataUrl, (img) => {
+        FabricImage.fromURL(ann.dataUrl).then((img) => {
           img.set({
             id: ann.id,
             left: ann.x * zoom,
@@ -290,7 +289,7 @@ export const FabricCanvas: React.FC<FabricCanvasProps> = ({ pageIndex, width, he
       }
       else if (ann.type === 'draw') {
         // Redraw freehand SVG paths by setting scale-1 path commands and scaling
-        const path = new fabric.Path(ann.path, {
+        const path = new Path(ann.path, {
           id: ann.id,
           left: ann.x * zoom,
           top: ann.y * zoom,
@@ -369,17 +368,17 @@ export const FabricCanvas: React.FC<FabricCanvasProps> = ({ pageIndex, width, he
 
     let isDrawingShape = false;
     let shapeStart = { x: 0, y: 0 };
-    let tempShape: fabric.Rect | fabric.Ellipse | null = null;
+    let tempShape: Rect | Ellipse | null = null;
 
-    const handleMouseDown = (opt: fabric.IEvent) => {
+    const handleMouseDown = (opt: any) => {
       if (activeTool === 'select' || activeTool === 'text' || activeTool === 'draw') return;
 
-      const pointer = canvas.getPointer(opt.e);
+      const pointer = canvas.getScenePoint(opt.e);
       shapeStart = { x: pointer.x, y: pointer.y };
       isDrawingShape = true;
 
       if (activeTool === 'highlight') {
-        tempShape = new fabric.Rect({
+        tempShape = new Rect({
           left: pointer.x,
           top: pointer.y,
           width: 0,
@@ -390,7 +389,7 @@ export const FabricCanvas: React.FC<FabricCanvasProps> = ({ pageIndex, width, he
         });
       } 
       else if (activeTool === 'rect') {
-        tempShape = new fabric.Rect({
+        tempShape = new Rect({
           left: pointer.x,
           top: pointer.y,
           width: 0,
@@ -402,7 +401,7 @@ export const FabricCanvas: React.FC<FabricCanvasProps> = ({ pageIndex, width, he
         });
       } 
       else if (activeTool === 'circle') {
-        tempShape = new fabric.Ellipse({
+        tempShape = new Ellipse({
           left: pointer.x,
           top: pointer.y,
           rx: 0,
@@ -419,15 +418,15 @@ export const FabricCanvas: React.FC<FabricCanvasProps> = ({ pageIndex, width, he
       }
     };
 
-    const handleMouseMove = (opt: fabric.IEvent) => {
+    const handleMouseMove = (opt: any) => {
       if (!isDrawingShape || !tempShape) return;
 
-      const pointer = canvas.getPointer(opt.e);
+      const pointer = canvas.getScenePoint(opt.e);
       const width = pointer.x - shapeStart.x;
       const height = pointer.y - shapeStart.y;
 
       if (activeTool === 'circle') {
-        const ellipse = tempShape as fabric.Ellipse;
+        const ellipse = tempShape as Ellipse;
         ellipse.set({
           rx: Math.abs(width) / 2,
           ry: Math.abs(height) / 2,
@@ -458,7 +457,7 @@ export const FabricCanvas: React.FC<FabricCanvasProps> = ({ pageIndex, width, he
       let finalHeight = 0;
 
       if (activeTool === 'circle') {
-        const ellipse = tempShape as fabric.Ellipse;
+        const ellipse = tempShape as Ellipse;
         finalWidth = ((ellipse.rx || 0) * 2) / zoom;
         finalHeight = ((ellipse.ry || 0) * 2) / zoom;
       } else {
@@ -507,7 +506,7 @@ export const FabricCanvas: React.FC<FabricCanvasProps> = ({ pageIndex, width, he
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
 
-    const handleObjectModified = (e: fabric.IEvent) => {
+    const handleObjectModified = (e: any) => {
       const obj = e.target;
       if (!obj || isUpdatingStoreRef.current) return;
 
@@ -547,7 +546,7 @@ export const FabricCanvas: React.FC<FabricCanvasProps> = ({ pageIndex, width, he
         addTextEdit(pageIndex, objId, {
           id: objId,
           pageIndex,
-          text: (obj as fabric.Textbox).text || '',
+          text: (obj as Textbox).text || '',
           originalText: originalItem.text,
           x: newX,
           y: newY,
@@ -571,7 +570,7 @@ export const FabricCanvas: React.FC<FabricCanvasProps> = ({ pageIndex, width, he
         const activeObj = canvas.getActiveObject();
         if (activeObj && (activeObj as any).id) {
           // Verify we aren't editing text right now
-          if (activeObj.isType('textbox') && (activeObj as fabric.Textbox).isEditing) {
+          if (activeObj.isType('textbox') && (activeObj as Textbox).isEditing) {
             return;
           }
           
