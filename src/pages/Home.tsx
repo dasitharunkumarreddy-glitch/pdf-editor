@@ -1,7 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { usePdfStore } from '../store/pdfStore';
-import { loadPdfDocument } from '../services/pdfService';
 import { Upload, FileText, Sparkles, CheckCircle, AlertCircle } from 'lucide-react';
 
 // A minimal, valid 1-page PDF displaying "Hello, world! Click to edit this text."
@@ -17,6 +16,7 @@ export const Home: React.FC = () => {
     setErrorMsg(null);
     
     try {
+      const { loadPdfDocument } = await import('../services/pdfService');
       const pdfDoc = await loadPdfDocument(buffer);
       setFile(file, buffer, pdfDoc);
       setNumPages(pdfDoc.numPages);
