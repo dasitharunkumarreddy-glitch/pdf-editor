@@ -16,9 +16,11 @@ export const Home: React.FC = () => {
     setErrorMsg(null);
     
     try {
+      const storedBuffer = buffer.slice(0);
+      const viewerBuffer = buffer.slice(0);
       const { loadPdfDocument } = await import('../services/pdfService');
-      const pdfDoc = await loadPdfDocument(buffer);
-      setFile(file, buffer, pdfDoc);
+      const pdfDoc = await loadPdfDocument(viewerBuffer);
+      setFile(file, storedBuffer, pdfDoc);
       setNumPages(pdfDoc.numPages);
     } catch (err) {
       console.error(err);

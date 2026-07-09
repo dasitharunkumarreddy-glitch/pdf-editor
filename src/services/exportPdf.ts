@@ -84,8 +84,8 @@ export async function exportPdfDocument(
   annotations: Record<number, AnnotationItem[]>,
   _pagesDimensions: Record<number, PageDimensions>
 ): Promise<Uint8Array> {
-  // Create a proper copy of the buffer to avoid detached ArrayBuffer issues.
-  const bufferCopy = new Uint8Array(originalBuffer).buffer;
+  // Load from a fresh copy so downstream PDF parsing cannot mutate stored bytes.
+  const bufferCopy = originalBuffer.slice(0);
   const pdfDoc = await PDFDocument.load(bufferCopy);
   const pages = pdfDoc.getPages();
 
